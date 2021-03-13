@@ -5,8 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -16,70 +18,71 @@ using System.Windows.Shapes;
 
 namespace Paint
 {
-    /// <summary>
-    /// Логика взаимодействия для MainWindow.xaml
-    /// </summary>
+
     public partial class MainWindow : Window
     {
         public MainWindow()
         {  
 
             InitializeComponent();
+            penButton.IsChecked = true;
+
+        }
+
+        private void pColor_Button_Click(object sender, RoutedEventArgs e)
+        {
+            ColorDialog dlg = new ColorDialog();
+            if(dlg.ShowDialog()==System.Windows.Forms.DialogResult.OK)
+            {
+                penColor.Fill = new SolidColorBrush(Color.FromArgb(dlg.Color.A, dlg.Color.R, dlg.Color.G, dlg.Color.B));
+                SetCanvasAttributes();
+            }
+        }
+
+        private void bColor_Button_Click(object sender, RoutedEventArgs e)
+        {
+            ColorDialog dlg = new ColorDialog();
+            if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                brushColor.Fill = new SolidColorBrush(Color.FromArgb(dlg.Color.A, dlg.Color.R, dlg.Color.G, dlg.Color.B));
+            }
+        }
+
+        private void ToggleButtons_Checked(object sender, RoutedEventArgs e)
+        {
+            foreach(UIElement el in FiguresList.Children)
+                if ((el is ToggleButton button) && el != sender)
+                        button.IsChecked = false;
+            foreach (UIElement el in ToolsList.Children)
+                if ((el is ToggleButton button) && el != sender)
+                    button.IsChecked = false;
+        }
+
+        private void Pen_Button_Checked(object sender, RoutedEventArgs e) {
             
+            ToggleButtons_Checked(sender, e);
+            SetCanvasAttributes();
+            
+        }
 
-            //Рисуем ломаную
-            var polyline = new Polyline();
-            polyline.Points = new PointCollection();
-            polyline.Points.Add(new Point(10, 40));
-            polyline.Points.Add(new Point(20, 10));
-            polyline.Points.Add(new Point(100, 150));
-            polyline.Points.Add(new Point(100, 150));
-            polyline.Points.Add(new Point(132, 76));
-            polyline.Points.Add(new Point(10, 40));
-            polyline.Stroke = Brushes.Black;
-            myGrid.Children.Add(polyline);
+        private void SetCanvasAttributes()
+        {
+            MyCanvas.EditingMode = InkCanvasEditingMode.Ink;
+            MyCanvas.Cursor = System.Windows.Input.Cursors.Pen;
+            MyCanvas.DefaultDrawingAttributes.Color = ((SolidColorBrush)(penColor.Fill)).Color;
+            MyCanvas.DefaultDrawingAttributes.Width = (int)penSize.Value + 1;
+            MyCanvas.DefaultDrawingAttributes.Height = (int)penSize.Value + 1;
+        }
 
-            //Рисуем отрезок
-            var segment = new Line();
-            segment.X1 = 10;
-            segment.X2 = 150;
-            segment.Y1 = 400;
-            segment.Y2 = 400;
-            segment.Stroke = Brushes.Red;
-            myGrid.Children.Add(segment);
-            var leftLine = new Line();
-            leftLine.X1 = 10;
-            leftLine.X2 = 10;
-            leftLine.Y1 = 390;
-            leftLine.Y2 = 410;
-            leftLine.Stroke = Brushes.Red;
-            myGrid.Children.Add(leftLine);
-            var RightLine = new Line();
-            RightLine.X1 = 150;
-            RightLine.X2 = 150;
-            RightLine.Y1 = 390;
-            RightLine.Y2 = 410;
-            RightLine.Stroke = Brushes.Red;
-            myGrid.Children.Add(RightLine);
+        private void penSize_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            SetCanvasAttributes();
+        }
 
-
-            //Рисуем многоугольник(звезду)
-            var poligon = new Polygon();
-            poligon.Points.Add(new Point(400, 280));
-            poligon.Points.Add(new Point(425, 235));
-            poligon.Points.Add(new Point(475, 225));
-            poligon.Points.Add(new Point(440, 190));
-            poligon.Points.Add(new Point(450, 140));
-            poligon.Points.Add(new Point(400, 160));
-            poligon.Points.Add(new Point(350, 140));
-            poligon.Points.Add(new Point(360, 190));
-            poligon.Points.Add(new Point(325, 225));
-            poligon.Points.Add(new Point(375, 235));
-            poligon.Fill = Brushes.Purple;
-            poligon.Stroke = Brushes.Purple;
-            myGrid.Children.Add(poligon);
-
-
+        private void Eraser_Button_Checked(object sender, RoutedEventArgs e)
+        {
+            MyCanvas.EditingMode = InkCanvasEditingMode.EraseByPoint;
+            MyCanvas.Cursor = System.Windows.Input.Cursors.Cross;
         }
     }
 }
